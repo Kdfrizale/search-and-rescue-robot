@@ -1,0 +1,16 @@
+roscore
+roslaunch chris_world_models gazebo_simple_creech_world.launch
+roslaunch chris_turtlebot_bringup chris_turtlebot_gazebo.launch
+roslaunch chris_turtlebot_navigation amcl_creech_world.launch
+-----------------------
+
+roslaunch flex_nav_turtlebot_bringup turtlebot_flex_nav_rviz.launch
+
+--------------------
+
+roslaunch flex_nav_turtlebot_bringup flex.launch
+roslaunch flex_nav_turtlebot_flexbe_behaviors flex_nav_turtlebot_behavior_testing.launch
+
+
+------------TODO---------------------
+create state to rotate and find ball

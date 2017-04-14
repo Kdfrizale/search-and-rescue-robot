@@ -7,10 +7,10 @@ from flexbe_core.proxy import ProxySubscriberCached
 from flexbe_core.proxy import ProxyServiceCaller
 from flexbe_core.proxy import ProxyActionClient
 
-from std_msgs.msg import Int32
+from std_msgs.msg import Float32
 
 
-class KyleCountState(EventState):
+class KyleVerifyState(EventState):
     '''
     This state publishes an open loop constant TwistStamped command based on parameters.
 
@@ -21,9 +21,11 @@ class KyleCountState(EventState):
     <= done                 Given time has passed.
     '''
 
-    def __init__(self, MaxCount = 100):
+    def __init__(self, ValueToMeasureAgainst = 7777.0):
         # Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-        super(KyleCountState, self).__init__(outcomes = ['done','notDone'])
+        super(KyleVerifyState, self).__init__(outcomes = ['verified','notVerified'],
+                                            input_keys=['inputValueVel','inputValueAng'])
+
         # Store state parameter for later use.
         #self._target_time           = rospy.Duration(target_time
         #self._twist.twist.linear.x  = velocity
@@ -32,11 +34,9 @@ class KyleCountState(EventState):
         # The constructor is called when building the state machine, not when actually starting the behavior.
         # Thus, we cannot save the starting time now and will do so later.
         self._start_time = None
-        self._count = Int32()
-        self._count.data = 0
+        self._value = Float32()
+        self._value.data = ValueToMeasureAgainst
         self._done       = None # Track the outcome so we can detect if transition is blocked
-        self._countMax = MaxCount
-
 
     def execute(self, userdata):
         # This method is called periodically while the state is active.
@@ -59,11 +59,12 @@ class KyleCountState(EventState):
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0
 
-        self._count.data = self._count.data + 1
-        if (self._count.data > self._countMax) :
-            self.count.data = 0
-            return 'done'
-        return 'notDone'
+
+        if (int(self._value.data) == int(userdata.inputValueVel.data)) :
+            return 'verified'
+        if (int(self._value.data) == int(userdata.inputValueAng.data)) :
+            return 'verified'
+        return 'notVerified'
 
     def on_enter(self, userdata):
         # This method is called when the state becomes active, i.e. a transition from another state to this one is taken.

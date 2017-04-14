@@ -7,14 +7,13 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from cpsc495_flexbe_flexbe_states.kyle_pub_state import KylePubState
-from flexbe_states.wait_state import WaitState
-from flexbe_states.operator_decision_state import OperatorDecisionState
-from cpsc495_flexbe_flexbe_states.kyle_twist_state import KyleTwistState
 from flexbe_states.subscriber_state import SubscriberState
+from cpsc495_flexbe_flexbe_states.kyle_twist_state import KyleTwistState
 from cpsc495_flexbe_flexbe_states.timed_twist_state import TimedTwistState
 from cpsc495_flexbe_flexbe_states.kyle_count_state import KyleCountState
-from cpsc495_flexbe_flexbe_states.twist_sub_state import TwistSubState
+from cpsc495_flexbe_flexbe_states.kyle_verify_state import KyleVerifyState
+from flexbe_states.wait_state import WaitState
+from flexbe_states.operator_decision_state import OperatorDecisionState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -22,12 +21,12 @@ from cpsc495_flexbe_flexbe_states.twist_sub_state import TwistSubState
 
 
 '''
-Created on Sat Jan 11 2017
-@author: David Conner
+Created on Wed Mar 29 2017
+@author: Kyle Frizzell
 '''
 class Lab5_State_MachineSM(Behavior):
 	'''
-	This is a simple example for a behavior.
+	Main State Machine for Lab 5
 	'''
 
 
@@ -36,7 +35,6 @@ class Lab5_State_MachineSM(Behavior):
 		self.name = 'Lab5_State_Machine'
 
 		# parameters of this behavior
-		self.add_parameter('waiting_time', 3)
 
 		# references to used behaviors
 
@@ -60,11 +58,45 @@ class Lab5_State_MachineSM(Behavior):
 
 
 		with _state_machine:
-			# x:88 y:99
-			OperatableStateMachine.add('initialPub0',
-										KylePubState(cmd_topic='/makethisupcount'),
+			# x:92 y:82
+			OperatableStateMachine.add('GetVelocity',
+										SubscriberState(topic="/makethisupvel", blocking=True, clear=False),
+										transitions={'received': 'getang', 'unavailable': 'checkCount'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'velocitymy'})
+
+			# x:721 y:137
+			OperatableStateMachine.add('move',
+										KyleTwistState(cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
+										transitions={'done': 'Should_Robot_Finish', 'getNewMove': 'GetVelocity'},
+										autonomy={'done': Autonomy.Off, 'getNewMove': Autonomy.Off},
+										remapping={'input_velocity': 'velocitymy', 'input_rotation_rate': 'angularmy'})
+
+			# x:277 y:51
+			OperatableStateMachine.add('getang',
+										SubscriberState(topic="/makethisupang", blocking=True, clear=False),
+										transitions={'received': 'Ball_NOT_in_image', 'unavailable': 'checkCount'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'angularmy'})
+
+			# x:97 y:394
+			OperatableStateMachine.add('Rotate',
+										TimedTwistState(target_time=.1, velocity=0, rotation_rate=.5, cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
 										transitions={'done': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off})
+
+			# x:286 y:434
+			OperatableStateMachine.add('checkCount',
+										KyleCountState(MaxCount=45),
+										transitions={'done': 'failed', 'notDone': 'Rotate'},
+										autonomy={'done': Autonomy.Off, 'notDone': Autonomy.Off})
+
+			# x:496 y:22
+			OperatableStateMachine.add('Ball_NOT_in_image',
+										KyleVerifyState(ValueToMeasureAgainst=7777.0),
+										transitions={'verified': 'checkCount', 'notVerified': 'move'},
+										autonomy={'verified': Autonomy.Off, 'notVerified': Autonomy.Off},
+										remapping={'inputValueVel': 'velocitymy', 'inputValueAng': 'angularmy'})
 
 			# x:991 y:264
 			OperatableStateMachine.add('simpleWait',
@@ -77,47 +109,6 @@ class Lab5_State_MachineSM(Behavior):
 										OperatorDecisionState(outcomes=["yes", "no"], hint="Should the Robot Stop?", suggestion=None),
 										transitions={'yes': 'finished', 'no': 'simpleWait'},
 										autonomy={'yes': Autonomy.Off, 'no': Autonomy.Off})
-
-			# x:815 y:76
-			OperatableStateMachine.add('move',
-										KyleTwistState(cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
-										transitions={'done': 'Should_Robot_Finish', 'getNewMove': 'GetVelocity'},
-										autonomy={'done': Autonomy.Off, 'getNewMove': Autonomy.Off},
-										remapping={'input_velocity': 'velocitymy', 'input_rotation_rate': 'angularmy'})
-
-			# x:517 y:34
-			OperatableStateMachine.add('getang',
-										SubscriberState(topic="/makethisupang", blocking=True, clear=False),
-										transitions={'received': 'move', 'unavailable': 'getCount'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'angularmy'})
-
-			# x:97 y:394
-			OperatableStateMachine.add('Rotate',
-										TimedTwistState(target_time=.1, velocity=0, rotation_rate=.1, cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
-										transitions={'done': 'GetVelocity'},
-										autonomy={'done': Autonomy.Off})
-
-			# x:672 y:348
-			OperatableStateMachine.add('getCount',
-										SubscriberState(topic='/makethisupcount', blocking=True, clear=False),
-										transitions={'received': 'checkCount', 'unavailable': 'checkCount'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'count'})
-
-			# x:286 y:434
-			OperatableStateMachine.add('checkCount',
-										KyleCountState(cmd_topic='/makethisupcount', MaxCount=10000),
-										transitions={'done': 'failed', 'notDone': 'Rotate'},
-										autonomy={'done': Autonomy.Off, 'notDone': Autonomy.Off},
-										remapping={'inputCount': 'count'})
-
-			# x:257 y:130
-			OperatableStateMachine.add('GetVelocity',
-										TwistSubState(topic="/makethisupvel", blocking=True, clear=False),
-										transitions={'received': 'getang', 'unavailable': 'getCount'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'velocitymy'})
 
 
 		return _state_machine

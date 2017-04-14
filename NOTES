@@ -12,6 +12,12 @@ roslaunch flex_nav_turtlebot_bringup flex.launch
 roslaunch flex_nav_turtlebot_flexbe_behaviors flex_nav_turtlebot_behavior_testing.launch
 
 
+----------------
+
+rosrun Lab5_blob_tracker listen_for_camera_cutdown.py 
+
+
 ------------TODO---------------------
 create state to keep track of count
 measure rotate state
+make listen_for_camera_class.py

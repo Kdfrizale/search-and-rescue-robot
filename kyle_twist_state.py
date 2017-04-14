@@ -7,10 +7,10 @@ from flexbe_core.proxy import ProxySubscriberCached
 from flexbe_core.proxy import ProxyServiceCaller
 from flexbe_core.proxy import ProxyActionClient
 
-from std_msgs.msg import Int32
+from geometry_msgs.msg import TwistStamped
 
 
-class KyleCountState(EventState):
+class KyleTwistState(EventState):
     '''
     This state publishes an open loop constant TwistStamped command based on parameters.
 
@@ -21,24 +21,25 @@ class KyleCountState(EventState):
     <= done                 Given time has passed.
     '''
 
-    def __init__(self, cmd_topic='cmd_vel', MaxCount = 100):
+    def __init__(self, cmd_topic='cmd_vel'):
         # Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-        super(KyleCountState, self).__init__(outcomes = ['done','notDone'],
-                                             input_keys=['inputCount'])
+        super(KyleTwistState, self).__init__(outcomes = ['done','getNewMove'],
+                                             input_keys=['input_velocity','input_rotation_rate'])
 
         # Store state parameter for later use.
-        #self._target_time           = rospy.Duration(target_time
+        #self._target_time           = rospy.Duration(target_time)
+        self._twist                 = TwistStamped()
         #self._twist.twist.linear.x  = velocity
         #self._twist.twist.angular.z = rotation_rate
 
         # The constructor is called when building the state machine, not when actually starting the behavior.
         # Thus, we cannot save the starting time now and will do so later.
         self._start_time = None
-        self._count = Int32()
+
         self._done       = None # Track the outcome so we can detect if transition is blocked
-        self._countMax = MaxCount
+
         self._cmd_topic    = cmd_topic
-        self._pub          = ProxyPublisher(       {self._cmd_topic: Int32})
+        self._pub          = ProxyPublisher(       {self._cmd_topic: TwistStamped})
 
     def execute(self, userdata):
         # This method is called periodically while the state is active.
@@ -61,13 +62,14 @@ class KyleCountState(EventState):
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0
 
-        self._count.data = self._count.data + 1
+        self._twist.twist.linear.x = userdata.input_velocity.data/1000
+        self._twist.twist.angular.z = userdata.input_rotation_rate.data/1000
 
-
-        self._pub.publish(self._cmd_topic, self._count)
-        if (self._count.data > self._countMax) : ####################################change to correct number
+        self._twist.header.stamp = rospy.Time.now()  # update the timestamp
+        self._pub.publish(self._cmd_topic, self._twist)
+        if (userdata.input_rotation_rate.data > -35) and (userdata.input_rotation_rate.data < 35) :
             return 'done'
-        return 'notDone'
+        return 'getNewMove'
 
     def on_enter(self, userdata):
         # This method is called when the state becomes active, i.e. a transition from another state to this one is taken.
@@ -75,3 +77,5 @@ class KyleCountState(EventState):
         self._done       = None # reset the completion flag
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0
+        self._twist.twist.linear.x = userdata.input_velocity.data/1000
+        self._twist.twist.angular.z = userdata.input_rotation_rate.data/1000

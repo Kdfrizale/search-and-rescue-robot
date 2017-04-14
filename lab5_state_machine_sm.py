@@ -14,6 +14,7 @@ from cpsc495_flexbe_flexbe_states.kyle_twist_state import KyleTwistState
 from flexbe_states.subscriber_state import SubscriberState
 from cpsc495_flexbe_flexbe_states.timed_twist_state import TimedTwistState
 from cpsc495_flexbe_flexbe_states.kyle_count_state import KyleCountState
+from cpsc495_flexbe_flexbe_states.twist_sub_state import TwistSubState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -59,61 +60,61 @@ class Lab5_State_MachineSM(Behavior):
 
 
 		with _state_machine:
-			# x:84 y:36
+			# x:88 y:99
 			OperatableStateMachine.add('initialPub0',
 										KylePubState(cmd_topic='/makethisupcount'),
-										transitions={'done': 'GetTwistCommand'},
+										transitions={'done': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:471 y:488
+			# x:991 y:264
 			OperatableStateMachine.add('simpleWait',
 										WaitState(wait_time=.01),
-										transitions={'done': 'GetTwistCommand'},
+										transitions={'done': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:864 y:316
+			# x:983 y:151
 			OperatableStateMachine.add('Should_Robot_Finish',
 										OperatorDecisionState(outcomes=["yes", "no"], hint="Should the Robot Stop?", suggestion=None),
 										transitions={'yes': 'finished', 'no': 'simpleWait'},
 										autonomy={'yes': Autonomy.Off, 'no': Autonomy.Off})
 
-			# x:441 y:214
+			# x:815 y:76
 			OperatableStateMachine.add('move',
 										KyleTwistState(cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
-										transitions={'done': 'Should_Robot_Finish', 'getNewMove': 'GetTwistCommand'},
+										transitions={'done': 'Should_Robot_Finish', 'getNewMove': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off, 'getNewMove': Autonomy.Off},
 										remapping={'input_velocity': 'velocitymy', 'input_rotation_rate': 'angularmy'})
 
-			# x:249 y:85
+			# x:517 y:34
 			OperatableStateMachine.add('getang',
 										SubscriberState(topic="/makethisupang", blocking=True, clear=False),
-										transitions={'received': 'move', 'unavailable': 'failed'},
+										transitions={'received': 'move', 'unavailable': 'getCount'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'angularmy'})
 
-			# x:17 y:300
+			# x:97 y:394
 			OperatableStateMachine.add('Rotate',
 										TimedTwistState(target_time=.1, velocity=0, rotation_rate=.1, cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
-										transitions={'done': 'GetTwistCommand'},
+										transitions={'done': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:234 y:224
+			# x:672 y:348
 			OperatableStateMachine.add('getCount',
 										SubscriberState(topic='/makethisupcount', blocking=True, clear=False),
-										transitions={'received': 'checkCount', 'unavailable': 'failed'},
+										transitions={'received': 'checkCount', 'unavailable': 'checkCount'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'count'})
 
-			# x:181 y:330
+			# x:286 y:434
 			OperatableStateMachine.add('checkCount',
-										KyleCountState(cmd_topic='/makethisupcount'),
+										KyleCountState(cmd_topic='/makethisupcount', MaxCount=10000),
 										transitions={'done': 'failed', 'notDone': 'Rotate'},
 										autonomy={'done': Autonomy.Off, 'notDone': Autonomy.Off},
 										remapping={'inputCount': 'count'})
 
-			# x:102 y:130
-			OperatableStateMachine.add('GetTwistCommand',
-										SubscriberState(topic="/makethisupvel", blocking=False, clear=False),
+			# x:257 y:130
+			OperatableStateMachine.add('GetVelocity',
+										TwistSubState(topic="/makethisupvel", blocking=True, clear=False),
 										transitions={'received': 'getang', 'unavailable': 'getCount'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'velocitymy'})

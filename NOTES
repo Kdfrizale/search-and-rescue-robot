@@ -8,6 +8,9 @@ roslaunch flex_nav_turtlebot_bringup turtlebot_flex_nav_rviz.launch
 
 --------------------
 
+GET THE MANIFEST FOR FINAL SM
+
+----------------
 roslaunch flex_nav_turtlebot_bringup flex.launch
 roslaunch flex_nav_turtlebot_flexbe_behaviors flex_nav_turtlebot_behavior_testing.launch
 

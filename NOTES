@@ -21,6 +21,5 @@ rosrun Lab5_blob_tracker listen_for_camera_cutdown.py
 
 
 ------------TODO---------------------
-create state to keep track of count
-measure rotate state
+add check/breakout in lab4_sm if ball is seen while moving on the path
 make listen_for_camera_class.py

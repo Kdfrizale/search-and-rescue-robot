@@ -24,12 +24,12 @@ from cpsc495_flexbe_behaviors.lab5_state_machine_sm import Lab5_State_MachineSM
 
 
 '''
-Created on Thu Apr 13 2017
-@author: team3
+Created on Fri Apr 14 2017
+@author: Kyle
 '''
 class final_labSM(Behavior):
 	'''
-	final
+	final lab
 	'''
 
 
@@ -128,7 +128,7 @@ class final_labSM(Behavior):
 			# x:664 y:307
 			OperatableStateMachine.add('Log Success',
 										LogState(text="Success!", severity=Logger.REPORT_HINT),
-										transitions={'done': 'Continue'},
+										transitions={'done': 'Lab5_State_Machine'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:664 y:374

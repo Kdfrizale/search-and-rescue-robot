@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="final_lab">
+
+	<executable package_path="cpsc495_flexbe_behaviors.final_lab_sm" class="final_labSM" />
+	<tagstring></tagstring>
+	<author>team3</author>
+	<date>Thu Apr 13 2017</date>
+	<description>
+		final
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="Turtlebot Simple Recovery" />
+
+	<!-- Available Parameters -->
+
+</behavior>

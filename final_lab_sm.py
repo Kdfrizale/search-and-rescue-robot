@@ -11,12 +11,17 @@ from flex_nav_flexbe_states.clear_costmaps_state import ClearCostmapsState
 from flex_nav_flexbe_states.get_path_state import GetPathState
 from flexbe_states.operator_decision_state import OperatorDecisionState
 from flex_nav_flexbe_states.follow_path_state import FollowPathState
-from flex_nav_turtlebot_flexbe_states.turtlebot_status_state import TurtlebotStatusState
+from cpsc495_flexbe_flexbe_states.turtlebot_status_state import TurtlebotStatusState
 from flex_nav_turtlebot_flexbe_behaviors.turtlebot_simple_recovery_sm import TurtlebotSimpleRecoverySM
 from flexbe_states.log_state import LogState
 from flex_nav_flexbe_states.get_pose_state import GetPoseState
 from cpsc495_flexbe_flexbe_states.timed_stop_state import TimedStopState
-from cpsc495_flexbe_behaviors.lab5_state_machine_sm import Lab5_State_MachineSM
+from cpsc495_flexbe_flexbe_states.kyle_pub_state import KylePubState
+from flexbe_states.subscriber_state import SubscriberState
+from cpsc495_flexbe_flexbe_states.kyle_verify_state import KyleVerifyState
+from cpsc495_flexbe_flexbe_states.kyle_twist_state import KyleTwistState
+from cpsc495_flexbe_flexbe_states.kyle_pubInput_state import KylePubInputState
+from cpsc495_flexbe_flexbe_states.timed_twist_state import TimedTwistState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -41,7 +46,6 @@ class final_labSM(Behavior):
 
 		# references to used behaviors
 		self.add_behavior(TurtlebotSimpleRecoverySM, 'Turtlebot Simple Recovery')
-		self.add_behavior(Lab5_State_MachineSM, 'Lab5_State_Machine')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -128,7 +132,7 @@ class final_labSM(Behavior):
 			# x:664 y:307
 			OperatableStateMachine.add('Log Success',
 										LogState(text="Success!", severity=Logger.REPORT_HINT),
-										transitions={'done': 'Lab5_State_Machine'},
+										transitions={'done': 'initialPub'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:664 y:374
@@ -181,11 +185,72 @@ class final_labSM(Behavior):
 										transitions={'done': 'Log Fail', 'failed': 'Log Fail'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:1077 y:325
-			OperatableStateMachine.add('Lab5_State_Machine',
-										self.use_behavior(Lab5_State_MachineSM, 'Lab5_State_Machine'),
-										transitions={'finished': 'finished', 'failed': 'Continue'},
-										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+			# x:75 y:417
+			OperatableStateMachine.add('initialPub',
+										KylePubState(cmd_topic='/makethisupcount', valueToPub=0),
+										transitions={'done': 'getVelocity'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:215 y:471
+			OperatableStateMachine.add('getVelocity',
+										SubscriberState(topic='/makethisupvel', blocking=True, clear=False),
+										transitions={'received': 'getAng', 'unavailable': 'getCount'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'myvelocity'})
+
+			# x:402 y:461
+			OperatableStateMachine.add('getAng',
+										SubscriberState(topic='/makethisupang', blocking=True, clear=False),
+										transitions={'received': 'Ball_in_image', 'unavailable': 'getCount'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'angularmy'})
+
+			# x:559 y:450
+			OperatableStateMachine.add('Ball_in_image',
+										KyleVerifyState(ValueToMeasureAgainst=7777.0),
+										transitions={'verified': 'getCount', 'notVerified': 'move'},
+										autonomy={'verified': Autonomy.Off, 'notVerified': Autonomy.Off},
+										remapping={'inputValueVel': 'myvelocity', 'inputValueAng': 'angularmy'})
+
+			# x:706 y:496
+			OperatableStateMachine.add('move',
+										KyleTwistState(cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
+										transitions={'done': 'ShouldRobotStop', 'getNewMove': 'getVelocity'},
+										autonomy={'done': Autonomy.Off, 'getNewMove': Autonomy.Off},
+										remapping={'input_velocity': 'myvelocity', 'input_rotation_rate': 'angularmy'})
+
+			# x:960 y:523
+			OperatableStateMachine.add('ShouldRobotStop',
+										OperatorDecisionState(outcomes=['yes','no'], hint="Should the Robot Stop?", suggestion=None),
+										transitions={'yes': 'finished', 'no': 'Continue'},
+										autonomy={'yes': Autonomy.Off, 'no': Autonomy.Off})
+
+			# x:658 y:615
+			OperatableStateMachine.add('getCount',
+										SubscriberState(topic='/makethisupcount', blocking=True, clear=False),
+										transitions={'received': 'verifyCount', 'unavailable': 'ShouldRobotStop'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'mycount'})
+
+			# x:443 y:679
+			OperatableStateMachine.add('verifyCount',
+										KyleVerifyState(ValueToMeasureAgainst=45),
+										transitions={'verified': 'Continue', 'notVerified': 'increaseCount'},
+										autonomy={'verified': Autonomy.Off, 'notVerified': Autonomy.Off},
+										remapping={'inputValueVel': 'mycount', 'inputValueAng': 'mycount'})
+
+			# x:242 y:708
+			OperatableStateMachine.add('increaseCount',
+										KylePubInputState(cmd_topic='/makethisupcount', increaseBy=1),
+										transitions={'done': 'rotate'},
+										autonomy={'done': Autonomy.Off},
+										remapping={'valueToIncrease': 'mycount'})
+
+			# x:75 y:709
+			OperatableStateMachine.add('rotate',
+										TimedTwistState(target_time=.1, velocity=0, rotation_rate=.5, cmd_topic='/turtlebot/stamped_cmd_vel_mux/input/navi'),
+										transitions={'done': 'getVelocity'},
+										autonomy={'done': Autonomy.Off})
 
 
 		return _state_machine

@@ -6,9 +6,7 @@ roslaunch chris_turtlebot_navigation amcl_creech_world.launch
 
 roslaunch flex_nav_turtlebot_bringup turtlebot_flex_nav_rviz.launch
 
---------------------
 
-GET THE MANIFEST FOR FINAL SM
 
 ----------------
 roslaunch flex_nav_turtlebot_bringup flex.launch
@@ -20,8 +18,3 @@ roslaunch flex_nav_turtlebot_flexbe_behaviors flex_nav_turtlebot_behavior_testin
 rosrun Lab5_blob_tracker listen_for_camera_cutdowned.py 
 set hue low = 002
 set hue high = 053
-
-
-------------TODO---------------------
-add check/breakout in lab4_sm if ball is seen while moving on the path
-make listen_for_camera_class.py

@@ -21,7 +21,7 @@ class KylePubState(EventState):
     <= done                 Given time has passed.
     '''
 
-    def __init__(self, cmd_topic='cmd_vel'):
+    def __init__(self, cmd_topic='cmd_vel', valueToPub = 0):
         # Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
         super(KylePubState, self).__init__(outcomes = ['done'],
                                              )
@@ -35,6 +35,7 @@ class KylePubState(EventState):
         # Thus, we cannot save the starting time now and will do so later.
         self._start_time = None
         self._count = Int32()
+        self._count.data = valueToPub
         self._done       = None # Track the outcome so we can detect if transition is blocked
 
         self._cmd_topic    = cmd_topic
@@ -60,10 +61,6 @@ class KylePubState(EventState):
         # Normal operation
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0
-
-        self._count.data = 0
-
-
         self._pub.publish(self._cmd_topic, self._count)
         return 'done'
 

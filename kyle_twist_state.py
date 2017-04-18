@@ -67,7 +67,7 @@ class KyleTwistState(EventState):
 
         self._twist.header.stamp = rospy.Time.now()  # update the timestamp
         self._pub.publish(self._cmd_topic, self._twist)
-        if (userdata.input_rotation_rate.data > -35) and (userdata.input_rotation_rate.data < 35) :
+        if (userdata.input_rotation_rate.data > -35) and (userdata.input_rotation_rate.data < 35) and (userdata.input_velocity.data > 0) and (userdata.input_velocity.data < 100):
             return 'done'
         return 'getNewMove'
 

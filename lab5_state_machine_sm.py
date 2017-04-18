@@ -7,13 +7,13 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_states.subscriber_state import SubscriberState
+from cpsc495_flexbe_flexbe_states.kyle_pub_state import KylePubState
 from cpsc495_flexbe_flexbe_states.kyle_twist_state import KyleTwistState
+from flexbe_states.subscriber_state import SubscriberState
 from cpsc495_flexbe_flexbe_states.timed_twist_state import TimedTwistState
-from cpsc495_flexbe_flexbe_states.kyle_count_state import KyleCountState
 from cpsc495_flexbe_flexbe_states.kyle_verify_state import KyleVerifyState
-from flexbe_states.wait_state import WaitState
 from flexbe_states.operator_decision_state import OperatorDecisionState
+from cpsc495_flexbe_flexbe_states.kyle_pubInput_state import KylePubInputState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -21,12 +21,12 @@ from flexbe_states.operator_decision_state import OperatorDecisionState
 
 
 '''
-Created on Wed Mar 29 2017
-@author: Kyle Frizzell
+Created on Sat Jan 11 2017
+@author: David Conner
 '''
 class Lab5_State_MachineSM(Behavior):
 	'''
-	Main State Machine for Lab 5
+	This is a simple example for a behavior.
 	'''
 
 
@@ -35,6 +35,7 @@ class Lab5_State_MachineSM(Behavior):
 		self.name = 'Lab5_State_Machine'
 
 		# parameters of this behavior
+		self.add_parameter('waiting_time', 3)
 
 		# references to used behaviors
 
@@ -58,12 +59,11 @@ class Lab5_State_MachineSM(Behavior):
 
 
 		with _state_machine:
-			# x:92 y:82
-			OperatableStateMachine.add('GetVelocity',
-										SubscriberState(topic="/makethisupvel", blocking=True, clear=False),
-										transitions={'received': 'getang', 'unavailable': 'checkCount'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'velocitymy'})
+			# x:42 y:28
+			OperatableStateMachine.add('initialPub',
+										KylePubState(cmd_topic='/makethisupcount', valueToPub=0),
+										transitions={'done': 'GetVelocity'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:721 y:137
 			OperatableStateMachine.add('move',
@@ -75,7 +75,7 @@ class Lab5_State_MachineSM(Behavior):
 			# x:277 y:51
 			OperatableStateMachine.add('getang',
 										SubscriberState(topic="/makethisupang", blocking=True, clear=False),
-										transitions={'received': 'Ball_NOT_in_image', 'unavailable': 'checkCount'},
+										transitions={'received': 'Ball_NOT_in_image', 'unavailable': 'getCount'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'angularmy'})
 
@@ -85,30 +85,46 @@ class Lab5_State_MachineSM(Behavior):
 										transitions={'done': 'GetVelocity'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:286 y:434
-			OperatableStateMachine.add('checkCount',
-										KyleCountState(MaxCount=45),
-										transitions={'done': 'failed', 'notDone': 'Rotate'},
-										autonomy={'done': Autonomy.Off, 'notDone': Autonomy.Off})
-
 			# x:496 y:22
 			OperatableStateMachine.add('Ball_NOT_in_image',
 										KyleVerifyState(ValueToMeasureAgainst=7777.0),
-										transitions={'verified': 'checkCount', 'notVerified': 'move'},
+										transitions={'verified': 'getCount', 'notVerified': 'move'},
 										autonomy={'verified': Autonomy.Off, 'notVerified': Autonomy.Off},
 										remapping={'inputValueVel': 'velocitymy', 'inputValueAng': 'angularmy'})
-
-			# x:991 y:264
-			OperatableStateMachine.add('simpleWait',
-										WaitState(wait_time=.01),
-										transitions={'done': 'GetVelocity'},
-										autonomy={'done': Autonomy.Off})
 
 			# x:983 y:151
 			OperatableStateMachine.add('Should_Robot_Finish',
 										OperatorDecisionState(outcomes=["yes", "no"], hint="Should the Robot Stop?", suggestion=None),
-										transitions={'yes': 'finished', 'no': 'simpleWait'},
+										transitions={'yes': 'finished', 'no': 'failed'},
 										autonomy={'yes': Autonomy.Off, 'no': Autonomy.Off})
+
+			# x:501 y:211
+			OperatableStateMachine.add('getCount',
+										SubscriberState(topic='/makethisupcount', blocking=True, clear=False),
+										transitions={'received': 'verifyCount', 'unavailable': 'Should_Robot_Finish'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'countMessage'})
+
+			# x:450 y:321
+			OperatableStateMachine.add('verifyCount',
+										KyleVerifyState(ValueToMeasureAgainst=45),
+										transitions={'verified': 'failed', 'notVerified': 'increaseCount'},
+										autonomy={'verified': Autonomy.Off, 'notVerified': Autonomy.Off},
+										remapping={'inputValueVel': 'countMessage', 'inputValueAng': 'countMessage'})
+
+			# x:143 y:120
+			OperatableStateMachine.add('GetVelocity',
+										SubscriberState(topic="/makethisupvel", blocking=True, clear=False),
+										transitions={'received': 'getang', 'unavailable': 'getCount'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'velocitymy'})
+
+			# x:271 y:304
+			OperatableStateMachine.add('increaseCount',
+										KylePubInputState(cmd_topic='/makethisupcount', increaseBy=1),
+										transitions={'done': 'Rotate'},
+										autonomy={'done': Autonomy.Off},
+										remapping={'valueToIncrease': 'countMessage'})
 
 
 		return _state_machine

@@ -11,7 +11,7 @@ from flex_nav_flexbe_states.clear_costmaps_state import ClearCostmapsState
 from flex_nav_flexbe_states.get_path_state import GetPathState
 from flexbe_states.operator_decision_state import OperatorDecisionState
 from flex_nav_flexbe_states.follow_path_state import FollowPathState
-from cpsc495_flexbe_flexbe_states.turtlebot_status_state import TurtlebotStatusState
+from flex_nav_turtlebot_flexbe_states.turtlebot_status_state import TurtlebotStatusState
 from flex_nav_turtlebot_flexbe_behaviors.turtlebot_simple_recovery_sm import TurtlebotSimpleRecoverySM
 from flexbe_states.log_state import LogState
 from flex_nav_flexbe_states.get_pose_state import GetPoseState
@@ -24,12 +24,12 @@ from cpsc495_flexbe_behaviors.lab5_state_machine_sm import Lab5_State_MachineSM
 
 
 '''
-Created on Fri Apr 14 2017
-@author: Kyle
+Created on Thu Apr 13 2017
+@author: team3
 '''
 class final_labSM(Behavior):
 	'''
-	final lab
+	final
 	'''
 
 
@@ -181,7 +181,7 @@ class final_labSM(Behavior):
 										transitions={'done': 'Log Fail', 'failed': 'Log Fail'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:1043 y:348
+			# x:1077 y:325
 			OperatableStateMachine.add('Lab5_State_Machine',
 										self.use_behavior(Lab5_State_MachineSM, 'Lab5_State_Machine'),
 										transitions={'finished': 'finished', 'failed': 'Continue'},

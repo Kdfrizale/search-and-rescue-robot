@@ -7,9 +7,10 @@ from flexbe_core.proxy import ProxySubscriberCached
 from flexbe_core.proxy import ProxyServiceCaller
 from flexbe_core.proxy import ProxyActionClient
 
+from std_msgs.msg import Int32
 
 
-class KyleCountState(EventState):
+class KylePubInputState(EventState):
     '''
     This state publishes an open loop constant TwistStamped command based on parameters.
 
@@ -20,9 +21,11 @@ class KyleCountState(EventState):
     <= done                 Given time has passed.
     '''
 
-    def __init__(self, MaxCount = 100):
+    def __init__(self, cmd_topic='cmd_vel', increaseBy = 1):
         # Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-        super(KyleCountState, self).__init__(outcomes = ['done','notDone'])
+        super(KylePubInputState, self).__init__(outcomes = ['done'],
+                                             input_keys=['valueToIncrease'])
+
         # Store state parameter for later use.
         #self._target_time           = rospy.Duration(target_time
         #self._twist.twist.linear.x  = velocity
@@ -31,12 +34,15 @@ class KyleCountState(EventState):
         # The constructor is called when building the state machine, not when actually starting the behavior.
         # Thus, we cannot save the starting time now and will do so later.
         self._start_time = None
-        self._count = 0
+        self._count = Int32()
+        self._increaseBy = Int32()
+        self._increaseBy.data = increaseBy
         self._done       = None # Track the outcome so we can detect if transition is blocked
-        self._countMax = MaxCount
 
+        self._cmd_topic    = cmd_topic
+        self._pub          = ProxyPublisher(       {self._cmd_topic: Int32})
 
-    #def execute(self, userdata):
+    def execute(self, userdata):
         # This method is called periodically while the state is active.
         # If no outcome is returned, the state will stay active.
 
@@ -52,23 +58,17 @@ class KyleCountState(EventState):
             # Normal completion, do not bother repeating the publish
     #        self._done = 'done'
     #        return 'done'
-
+        self._count.data = userdata.valueToIncrease
+        self._count.data = self._count.data
         # Normal operation
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0
-
-        #return 'notDone'
-
+        self._pub.publish(self._cmd_topic, self._count)
+        return 'done'
 
     def on_enter(self, userdata):
         # This method is called when the state becomes active, i.e. a transition from another state to this one is taken.
         self._start_time = rospy.Time.now()
         self._done       = None # reset the completion flag
-        self._count = self._count + 1
-        Logger.loghint("count below")
-        if (self._count > self._countMax):
-            self.count = 0
-            #return 'done'
-        return 'notDone'
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0

@@ -68,7 +68,7 @@ class KyleCountState(EventState):
         Logger.loghint("count below")
         if (self._count > self._countMax):
             self.count = 0
-            #return 'done'
+            return 'done'
         return 'notDone'
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0

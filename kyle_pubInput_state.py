@@ -58,8 +58,9 @@ class KylePubInputState(EventState):
             # Normal completion, do not bother repeating the publish
     #        self._done = 'done'
     #        return 'done'
-        self._count.data = userdata.valueToIncrease
+        self._count.data = userdata.valueToIncrease.data
         self._count.data = self._count.data
+        self._count.data = self._count.data + self._increaseBy.data
         # Normal operation
         #self._twist.twist.linear.x = 1.0
         #self._twist.twist.angular.z = 1.0

@@ -18,3 +18,15 @@ roslaunch flex_nav_turtlebot_flexbe_behaviors flex_nav_turtlebot_behavior_testin
 rosrun Lab5_blob_tracker listen_for_camera_cutdowned.py 
 set hue low = 002
 set hue high = 053
+
+
+-------------------
+Depends On
+chris_turtlebot_flexible_navigaion
+chris_turtlebot_navigation
+flexible_navigation
+-------------
+Setup
+Clone above Depends
+copy state machines in Final_Project Dir, into where flexbe looks for state machines
+copy states in Final_Project Dir, into where flexbe looks for states

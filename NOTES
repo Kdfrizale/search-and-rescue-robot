@@ -22,9 +22,10 @@ set hue high = 053
 
 -------------------
 Depends On
-chris_turtlebot_flexible_navigaion
-chris_turtlebot_navigation
-flexible_navigation
+chris_turtlebot_flexible_navigaion----Github CNU
+chris_turtlebot_navigation------------Github CNU
+flexible_navigation-------------------Github CNU
+Lab5_blob_tracker---------------------Gitlab Team 3
 -------------
 Setup
 Clone above Depends

@@ -11,4 +11,5 @@ for the next location to search.
 
 * The benefits of robot-operator cooperation
 * Image Processing
+* State machine design
 

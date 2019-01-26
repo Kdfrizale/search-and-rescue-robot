@@ -9,7 +9,6 @@ for the next location to search.
 
 #What I Learned
 
-*The benefits of robot-operator cooperation
-
-*Image Processing
+* The benefits of robot-operator cooperation
+* Image Processing
 

@@ -7,7 +7,7 @@ The Operator gives over-arching goals such as where to search.
 The Robot then autonomously navigates to that location and then searches the surrounding area and reports if the object is  found, or asks
 for the next location to search.
 
-#What I Learned
+# What I Learned
 
 * The benefits of robot-operator cooperation
 * Image Processing
